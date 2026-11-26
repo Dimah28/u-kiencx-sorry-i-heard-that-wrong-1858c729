@@ -9,6 +9,10 @@ writes the exact same bytes, so repeated runs are byte-identical.
 
 The gate is checked twice: once on the constant, once on the file read
 back, so a write that silently changes a byte cannot slip through.
+
+Validation rejects control characters, stray leading or trailing
+whitespace, and anything that is not one printable line, so only a
+clean spoken apology can reach the file.
 """
 
 import os
@@ -33,6 +37,12 @@ def _reject_control_chars(text: str) -> None:
             )
 
 
+def _reject_links(text: str) -> None:
+    """A spoken apology carries no link: reject anything link-shaped."""
+    if "://" in text or text.startswith(("www.", "http")):
+        raise ValueError("entry must not contain a link")
+
+
 def check_shape(text: str) -> None:
     """Validate the entry against the competition gate."""
     if not isinstance(text, str):
@@ -48,6 +58,7 @@ def check_shape(text: str) -> None:
     if "\n" in text or "\r" in text:
         raise ValueError("entry must be a single line")
     _reject_control_chars(text)
+    _reject_links(text)
 
 
 def main() -> None:
